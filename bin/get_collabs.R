@@ -5,7 +5,7 @@ library(stringr)
 args = commandArgs(trailingOnly = TRUE)
 
 # list of unique post-secondary institutions
-inst.campus <- read.csv("data/InstitutionCampus.csv", header = T)
+inst.campus <- read.csv(args[2], header = T)
 unique.inst <- inst.campus$ParentName %>% 
                unique() %>% 
                as.character()

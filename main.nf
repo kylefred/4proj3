@@ -1,21 +1,33 @@
 #!/usr/bin/env nextflow
 
-params.file_dir = 'data/abs*'
+params.abs_dir = 'data/abs*'
+params.inst_dir = 'data/InstitutionCampus.csv'
 params.out_dir = 'output/'
-params.out_file = 'histogram.png'
 
-file_channel = Channel.fromPath( params.file_dir )
+abs_channel = Channel.fromPath( params.abs_dir )
+inst_channel = Channel.fromPath( params.inst_dir )
 
 process get_collaborators {
     container 'rocker/tidyverse'
 
     input:
-    file abstract from file_channel
+    file f from abs_channel.combine( inst_channel )
 
     output:
-    file "out.csv" into collab.channel
+    file "collab.csv" into collab_channel
 
     """
-    Rscript $baseDir/bin/get_collabs.R $abstract
+    Rscript $baseDir/bin/get_collabs.R $f
+    """
+}
+
+process rank_collaborators {
+    container "rocker/tidyverse"
+
+    input:
+    file c from collab_channel.collectFile(name: 'all_collabs.csv', newLine: true)
+
+    """
+    head $c
     """
 }
