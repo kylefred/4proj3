@@ -6,19 +6,18 @@ args = commandArgs(trailingOnly = TRUE)
 
 # list of unique post-secondary institutions
 inst.campus <- read.csv(args[2], header = T)
-unique.inst <- inst.campus$ParentName %>% 
-               unique() %>% 
-               as.character()
 
-# added several other common institutions, based on exploratory data analysis
-# however, this is certainly not an exhaustive list
-unique.inst <- c(unique.inst,
-                 "National Institutes of Health",
-                 "Brigham and Women's Hospital",
-                 "Harvard T.H. Chan School of Public Health",
-                 "Centers for Disease Control and Prevention",
-                 "Baylor College of Medicine")
-      
+# make new table, turning important factors into characters
+inst.campus <- inst.campus %>%
+  transmute(ParentName = as.character(ParentName),
+            LocationName = as.character(LocationName))
+
+# use parentname if present, locationname otherwise
+unique.inst <- inst.campus %>% 
+  mutate(name = ifelse(ParentName == "-", LocationName, ParentName)) %>%
+  .$name %>%
+  unique()
+
 # get author information line and title 
 get.author.title <- function(file.p) {
   
@@ -81,6 +80,11 @@ get.collaborators <- function(file.p) {
 collab.df <- get.collaborators( args[1] ) %>%
   # filtering out internal researchers, which will result in many empty output files
   filter(institute != "University of North Carolina at Chapel Hill")
+
+collab.df <- collab.df$institute %>%
+  unique() %>%
+  tibble(institute = .) %>%
+  mutate(title = collab.df$title[1])
 
 # clear file before writing, since we will be appending
 write.csv(collab.df, file = "collab.csv", row.names = F, col.names = F)
