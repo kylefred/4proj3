@@ -29,9 +29,9 @@ process rank_collaborators {
     file c from collab_channel.collectFile(name: 'all_collabs.csv', newLine: true)
 
     output:
-    file "test.txt" into output_channel
+    file "ranked.csv" into output_channel
 
     """
-    cat $c > test.txt
+    Rscript $baseDir/bin/rank_collabs.R $c
     """
 }
