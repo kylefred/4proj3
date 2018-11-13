@@ -19,9 +19,17 @@ ranked.collabs <- full.table %>%
 
 top10 <- ranked.collabs %>% 
    head(10)
-   
-#         titles = paste( as.character(Title) )) %>%
-  # only interested in external collaborators
-  # arrange(desc(n))
 
-write.csv(top10, file = "ranked.csv", col.names = F, row.names = F, quote = F)
+write.csv(top10, file = "top10.csv", col.names = F, row.names = F, quote = F)
+
+top10.titles <- full.table %>%
+   filter(Collaborator == top10$Collaborator[1])
+
+for (i in 2:10) {
+   new.df <- full.table %>%
+      filter(Collaborator == top10$Collaborator[i]) 
+   top10.titles <- top10.titles %>%
+      rbind(new.df)
+}
+
+write.csv(top10.titles, file = "titles.csv", row.names = F)
