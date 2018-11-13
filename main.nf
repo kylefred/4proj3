@@ -22,18 +22,16 @@ process get_collaborators {
 }
 
 process rank_collaborators {
-
+    container 'rocker/tidyverse'
+    publishDir baseDir
+ 
     input:
     file c from collab_channel.collectFile(name: 'all_collabs.csv', newLine: true)
 
     output:
-    stdout result
+    file "test.txt" into output_channel
 
     """
-    cat $c
+    cat $c > test.txt
     """
-}
-
-result.subscribe {
-    println it
 }

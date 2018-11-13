@@ -10,8 +10,11 @@ colnames(full.table) <- c("Collaborator","Title")
 
 # rank collaborators by number of appearances
 ranked.collabs <- full.table %>% 
-  group_by(Collaborator) %>%
-  summarize(n = n(), 
-            titles = paste( as.character(Title) )) %>%
+   filter(Title != 'title') %>%
+   group_by(Collaborator) %>%
+   summarize(n = n())
+
+ranked.collabs
+   #         titles = paste( as.character(Title) )) %>%
   # only interested in external collaborators
-  arrange(desc(n))
+  # arrange(desc(n))

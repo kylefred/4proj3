@@ -81,13 +81,6 @@ get.collaborators <- function(file.p) {
 collab.df <- get.collaborators( args[1] ) %>%
   # filtering out internal researchers, which will result in many empty output files
   filter(institute != "University of North Carolina at Chapel Hill")
-nrows <- dim(collab.df)[1]
 
 # clear file before writing, since we will be appending
-close( file( "collab.csv", open="w" ) )
-
-# check size because some tables are empty after filtering out UNC-CH
-if (nrows >= 1)
-  for (i in 1:nrows)
-    write(paste0(unlist(collab.df[i, 1]), ",", collab.df[i, 2]),
-                 "collab.csv", append = T)
+write.csv(collab.df, file = "collab.csv", row.names = F, col.names = F)
