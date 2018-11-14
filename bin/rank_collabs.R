@@ -20,8 +20,6 @@ ranked.collabs <- full.table %>%
 top10 <- ranked.collabs %>% 
    head(10)
 
-write.csv(top10, file = "top10.csv", col.names = F, row.names = F, quote = F)
-
 top10.titles <- full.table %>%
    filter(Collaborator == top10$Collaborator[1])
 
@@ -32,4 +30,52 @@ for (i in 2:10) {
       rbind(new.df)
 }
 
-write.csv(top10.titles, file = "titles.csv", row.names = F)
+# common words that don't convey much meaning
+common.words <- c("of", "in", "the", "and", "for", "end", "to",
+                  "a", "by", "with", "among", "patients", "from",
+                  "10", "as", "patient", "after", "towards")
+# # typos noticed in exploratory data analysis
+typos = c("andrisk", "inyeast", "ofcolorectal", "humanglioma", 
+          "thecanine", "integratinggenomic")
+# list of all words to ignore
+ignore = c(common.words, typos)
+
+top10.titles$Title <- as.character(top10.titles$Title)
+
+# get collapsed titles
+collected.titles <- top10.titles %>% 
+  group_by(Collaborator) %>%
+  summarise(all = paste(Title, collapse = " ")) 
+
+get.common.words <- function(collab.ind) {
+  # generate vector of words in collapsed title
+  words <- gregexpr("[a-zA-Z0-9'\\-]+", collected.titles$all[collab.ind])
+  words <- regmatches (collected.titles$all[collab.ind], words) %>%
+    unlist() %>% tolower()  
+  
+  # ignore selected words, see above
+  words <- which(!(words %in% ignore)) %>%
+    words[.]
+  
+  # get 10 most common words
+  common.df <- tibble(words = words) %>%
+    group_by(words) %>%
+    summarise(word.count = n()) %>%
+    arrange(desc(word.count)) %>%
+    mutate(Collaborator = collected.titles$Collaborator[collab.ind]) %>%
+    .[1:10,]
+  return(common.df)
+}
+
+total.df <- get.common.words(1)
+
+for (i in 2:10) {
+  total.df <- total.df %>%
+    rbind(get.common.words(i))
+}
+
+total.df <- total.df %>%
+  left_join(collected.titles, by = 'Collaborator') %>%
+  select(Collaborator, n, words, word.count)
+
+write.csv(total.df, file = "final.csv")
