@@ -42,9 +42,14 @@ get.author.title <- function(file.p) {
   }
   close(file.con)
   
+  # usually line 2 is title, sometimes it's lines 3 if there's a conflict of interest statement
+  abs.title <- lines[2]
+  if ( str_detect(abs.title, "doi:") )
+    abs.title <- lines[3]
+
   # combine author line and title
   results <- c(str_subset(lines, author.info),
-               lines[2]) 
+               abs.title) 
   return(results)
 }
 

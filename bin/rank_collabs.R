@@ -14,12 +14,14 @@ ranked.collabs <- full.table %>%
    filter(Title != 'title') %>%
    group_by(Collaborator) %>%
    # get count for ranking purposes
-   summarize(n = n()) %>%
-   arrange(desc(n))
+   summarize(collab.count = n()) %>%
+   arrange(desc(collab.count))
 
+# top 10 collaborators
 top10 <- ranked.collabs %>% 
    head(10)
 
+# titles for top10 collaborators
 top10.titles <- full.table %>%
    filter(Collaborator == top10$Collaborator[1])
 
@@ -33,8 +35,9 @@ for (i in 2:10) {
 # common words that don't convey much meaning
 common.words <- c("of", "in", "the", "and", "for", "end", "to",
                   "a", "by", "with", "among", "patients", "from",
-                  "10", "as", "patient", "after", "towards")
-# # typos noticed in exploratory data analysis
+                  "10", "as", "patient", "after", "towards", "an",
+                  "is", "between", "at", "do", "across")
+# typos noticed in exploratory data analysis
 typos = c("andrisk", "inyeast", "ofcolorectal", "humanglioma", 
           "thecanine", "integratinggenomic")
 # list of all words to ignore
@@ -45,8 +48,10 @@ top10.titles$Title <- as.character(top10.titles$Title)
 # get collapsed titles
 collected.titles <- top10.titles %>% 
   group_by(Collaborator) %>%
-  summarise(all = paste(Title, collapse = " ")) 
+  summarise(all = paste(Title, collapse = " "),
+            collab.count = n()) 
 
+# get 10 most common words at collab.ind
 get.common.words <- function(collab.ind) {
   # generate vector of words in collapsed title
   words <- gregexpr("[a-zA-Z0-9'\\-]+", collected.titles$all[collab.ind])
@@ -67,6 +72,7 @@ get.common.words <- function(collab.ind) {
   return(common.df)
 }
 
+# table for all common words
 total.df <- get.common.words(1)
 
 for (i in 2:10) {
@@ -74,8 +80,10 @@ for (i in 2:10) {
     rbind(get.common.words(i))
 }
 
+# join with table of collaborator totals
 total.df <- total.df %>%
   left_join(collected.titles, by = 'Collaborator') %>%
-  select(Collaborator, n, words, word.count)
+  select(Collaborator, collab.count, words, word.count)
 
+# output the file
 write.csv(total.df, file = "final.csv")
